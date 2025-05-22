@@ -1,0 +1,43 @@
+graph TD
+
+  subgraph Scraping Layer
+    A1[Dev.to Scraper]
+    A2[Hacker News Scraper]
+    A3[Reddit Scraper]
+    A4[RSS Feed Parser]
+  end
+
+  subgraph Ingestion
+    B1[Queue - RabbitMQ or AWS SQS]
+  end
+
+  subgraph Backend Services
+    C1[Event Processor]
+    C2[Event Store - MongoDB or EventStoreDB]
+    C3[Read Model DB - MongoDB]
+    C4[Full-text Search - Meilisearch or Elasticsearch]
+  end
+
+  subgraph API Layer
+    D1[GraphQL API]
+  end
+
+  subgraph Frontend
+    E1[Web App - React]
+  end
+
+  %% Connections
+  A1 --> B1
+  A2 --> B1
+  A3 --> B1
+  A4 --> B1
+
+  B1 --> C1
+  C1 --> C2
+  C1 --> C3
+  C1 --> C4
+
+  C3 --> D1
+  C4 --> D1
+  D1 --> E1
+
