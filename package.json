@@ -6,14 +6,19 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "start": "node dist/index.js",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
     "tsup": "^6.0.0",
     "typescript": "^5.0.0"
   },
-  "dependencies": {}
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx}": "eslint"
+  }
 }
