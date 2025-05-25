@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+    rabbitmq:
+        image: rabbitmq:4.1.0-management-alpine
+        ports:
+            - "5672:5672" # RabbitMQ main port
+            - "15672:15672" # RabbitMQ management UI
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+    mongodb:
+        image: mongo:8-noble
+        ports:
+            - "27017:27017"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: node index.js
+        depends_on:
+            - rabbitmq
+            - mongodb
+        environment:
+            RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+            MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/

@@ -1,7 +1,8 @@
 import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import { defineConfig } from "eslint/config";
 
 export default defineConfig([
     // TypeScript files
@@ -19,9 +20,12 @@ export default defineConfig([
         },
         plugins: {
             "@typescript-eslint": tseslint.plugin,
+            "simple-import-sort": simpleImportSort,
         },
         rules: {
             ...tseslint.configs.recommended.rules,
+            "simple-import-sort/imports": "error",
+            "simple-import-sort/exports": "error",
         },
     },
     // JavaScript files
@@ -36,8 +40,13 @@ export default defineConfig([
                 sourceType: "module",
             },
         },
+        plugins: {
+            "simple-import-sort": simpleImportSort,
+        },
         rules: {
             ...js.configs.recommended.rules,
+            "simple-import-sort/imports": "error",
+            "simple-import-sort/exports": "error",
         },
     },
 ]);
