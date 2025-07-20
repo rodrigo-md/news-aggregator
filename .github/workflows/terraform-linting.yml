@@ -1,0 +1,33 @@
+name: Terraform Lint and Validate
+
+on:
+    pull_request:
+        paths:
+            - "infra/**.tf"
+
+jobs:
+    lint-and-validate:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v1
+
+            - name: Install TFLint
+              run: |
+                  curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+            - name: Terraform Format Check
+              run: terraform fmt -check -recursive ./infra
+
+            - name: Terraform Lint
+              run: tflint ./infra
+
+            - name: Terraform Init
+              run: terraform -chdir=./infra init -backend=false
+
+            - name: Terraform Validate
+              run: terraform -chdir=./infra validate
