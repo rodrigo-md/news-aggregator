@@ -42,7 +42,7 @@ jobs:
               run: terraform -chdir=./infra validate | tee validate-output.txt
               continue-on-error: true
 
-            - name: Create PR Comment with Results
+            - name: Create PR Comment and Fail if Issues Found
               if: always()
               uses: actions/github-script@v7
               with:
@@ -51,23 +51,24 @@ jobs:
                       const fs = require('fs');
 
                       // Helper to strip ANSI escape codes
-                      const stripAnsi = (str) => str.replace(
-                        // eslint-disable-next-line no-control-regex
-                        /\u001b\[.*?m/g, 
-                        ''
-                      ).trim();
+                      const stripAnsi = (str) => str.replace(/\u001b\[.*?m/g, '').trim();
 
                       const fmt = stripAnsi(fs.readFileSync('fmt-output.txt', 'utf8') || '');
                       const lint = stripAnsi(fs.readFileSync('lint-output.txt', 'utf8') || '');
                       const validate = stripAnsi(fs.readFileSync('validate-output.txt', 'utf8') || '');
 
+                      const fmtOK = fmt === '';
+                      const lintOK = lint === '';
+                      const validateOK = /Success!/i.test(validate);
+
                       const body = `
                       ## Terraform Checks
-                      **Format:**\n\`\`\`\n${fmt || '✅ No format issues'}\n\`\`\`
-                      **Lint:**\n\`\`\`\n${lint || '✅ No lint issues'}\n\`\`\`
-                      **Validate:**\n\`\`\`\n${validate || '✅ Validation passed'}\n\`\`\`
+                      **Format:** ${fmtOK ? '✅ No format issues' : '❌ No format issues'}
+                      **Lint:** ${lintOK ? '✅ No lint issues' : '❌ No lint issues'}
+                      **Validate:** ${validateOK ? '✅ Validation passed' : '❌ Validation passed'}
                       `;
 
+                      // Find existing comment or create one
                       const { data: comments } = await github.rest.issues.listComments({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
@@ -92,35 +93,7 @@ jobs:
                         });
                       }
 
-            - name: Fail if issues found
-              if: always()
-              run: |
-                  strip_ansi() {
-                    sed 's/\x1b\[[0-9;]*m//g'
-                  }
-
-                  fmt_has_issues=false
-                  lint_has_issues=false
-                  validate_has_issues=false
-
-                  if [[ -s fmt-output.txt ]]; then
-                    fmt_has_issues=true
-                  fi
-
-                  if [[ -s lint-output.txt ]]; then
-                    lint_has_issues=true
-                  fi
-
-                  if [[ -s validate-output.txt ]]; then
-                    clean_validate=$(strip_ansi < validate-output.txt)
-                    if ! grep -qi "Success!" <<< "$clean_validate"; then
-                      validate_has_issues=true
-                    fi
-                  fi
-
-                  if $fmt_has_issues || $lint_has_issues || $validate_has_issues; then
-                    echo "❌ Terraform issues detected."
-                    exit 1
-                  else
-                    echo "✅ All Terraform checks passed."
-                  fi
+                      // Fail the workflow if any check fails
+                      if (!fmtOK || !lintOK || !validateOK) {
+                        core.setFailed("❌ Terraform issues detected");
+                      }
