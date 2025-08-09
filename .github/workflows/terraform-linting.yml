@@ -50,15 +50,22 @@ jobs:
                   script: |
                       const fs = require('fs');
 
-                      const fmt = fs.readFileSync('fmt-output.txt', 'utf8').trim() || '✅ No format issues';
-                      const lint = fs.readFileSync('lint-output.txt', 'utf8').trim() || '✅ No lint issues';
-                      const validate = fs.readFileSync('validate-output.txt', 'utf8').trim() || '✅ Validation passed';
+                      // Helper to strip ANSI escape codes
+                      const stripAnsi = (str) => str.replace(
+                        // eslint-disable-next-line no-control-regex
+                        /\u001b\[.*?m/g, 
+                        ''
+                      ).trim();
+
+                      const fmt = stripAnsi(fs.readFileSync('fmt-output.txt', 'utf8') || '');
+                      const lint = stripAnsi(fs.readFileSync('lint-output.txt', 'utf8') || '');
+                      const validate = stripAnsi(fs.readFileSync('validate-output.txt', 'utf8') || '');
 
                       const body = `
                       ## Terraform Checks
-                      **Format:**\n\`\`\`\n${fmt}\n\`\`\`
-                      **Lint:**\n\`\`\`\n${lint}\n\`\`\`
-                      **Validate:**\n\`\`\`\n${validate}\n\`\`\`
+                      **Format:**\n\`\`\`\n${fmt || '✅ No format issues'}\n\`\`\`
+                      **Lint:**\n\`\`\`\n${lint || '✅ No lint issues'}\n\`\`\`
+                      **Validate:**\n\`\`\`\n${validate || '✅ Validation passed'}\n\`\`\`
                       `;
 
                       const { data: comments } = await github.rest.issues.listComments({
@@ -88,7 +95,32 @@ jobs:
             - name: Fail if issues found
               if: always()
               run: |
-                  if [[ -s fmt-output.txt || -s lint-output.txt || -s validate-output.txt ]]; then
+                  strip_ansi() {
+                    sed 's/\x1b\[[0-9;]*m//g'
+                  }
+
+                  fmt_has_issues=false
+                  lint_has_issues=false
+                  validate_has_issues=false
+
+                  if [[ -s fmt-output.txt ]]; then
+                    fmt_has_issues=true
+                  fi
+
+                  if [[ -s lint-output.txt ]]; then
+                    lint_has_issues=true
+                  fi
+
+                  if [[ -s validate-output.txt ]]; then
+                    clean_validate=$(strip_ansi < validate-output.txt)
+                    if ! grep -qi "Success!" <<< "$clean_validate"; then
+                      validate_has_issues=true
+                    fi
+                  fi
+
+                  if $fmt_has_issues || $lint_has_issues || $validate_has_issues; then
                     echo "❌ Terraform issues detected."
                     exit 1
+                  else
+                    echo "✅ All Terraform checks passed."
                   fi
