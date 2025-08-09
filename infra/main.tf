@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "tf_bucket" {
   bucket = "${var.project_name}-tfstate-${random_string.suffix.result}"
 
   tags = {
-    Project = "${var.project_name}"
+    Project     = "${var.project_name}"
     Environment = "${var.environment}"
   }
 }
