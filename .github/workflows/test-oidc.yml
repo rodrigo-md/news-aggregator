@@ -21,8 +21,8 @@ jobs:
             - name: Configure AWS credentials (OIDC)
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-                  aws-region: ${{ env.AWS_REGION }}
+                  role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+                  aws-region: ${{ vars.AWS_REGION }}
 
             - name: Test AWS Connection
               run: aws sts get-caller-identity
