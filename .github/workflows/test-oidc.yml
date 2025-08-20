@@ -1,0 +1,38 @@
+name: AWS OIDC Connection Test
+
+on:
+    push:
+        branches:
+            - "feat/*"
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    aws-oidc-test:
+        runs-on: ubuntu-latest
+        environment: dev
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Decode OIDC token
+              run: |
+                  TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                  "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+                  echo "Raw JWT: $TOKEN"
+
+                  # Decode payload (middle part of JWT)
+                  PAYLOAD=$(echo $TOKEN | cut -d '.' -f2 | tr '_-' '/+' | base64 --decode)
+                  echo "Decoded payload:"
+                  echo "$PAYLOAD"
+
+            - name: Configure AWS credentials (OIDC)
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+                  aws-region: ${{ vars.AWS_REGION }}
+
+            - name: Test AWS Connection
+              run: aws sts get-caller-identity
