@@ -17,6 +17,11 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
+            - name: Dump OIDC token
+              run: |
+                  TOKEN=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
+                  -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+                  echo $TOKEN | jq -r '.claims.sub'
 
             - name: Configure AWS credentials (OIDC)
               uses: aws-actions/configure-aws-credentials@v4
