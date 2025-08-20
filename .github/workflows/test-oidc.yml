@@ -17,12 +17,16 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
-            - name: Dump OIDC token sub
+            - name: Decode OIDC token
               run: |
                   TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
                   "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
-                  echo "OIDC sub claim:"
-                  echo "$TOKEN" | jq -r '.sub'
+                  echo "Raw JWT: $TOKEN"
+
+                  # Decode payload (middle part of JWT)
+                  PAYLOAD=$(echo $TOKEN | cut -d '.' -f2 | tr '_-' '/+' | base64 --decode)
+                  echo "Decoded payload:"
+                  echo "$PAYLOAD"
 
             - name: Configure AWS credentials (OIDC)
               uses: aws-actions/configure-aws-credentials@v4
