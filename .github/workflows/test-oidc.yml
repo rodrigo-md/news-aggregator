@@ -1,7 +1,7 @@
 name: AWS OIDC Connection Test
 
 on:
-    pull_request:
+    push:
         branches:
             - "feat/*"
 
