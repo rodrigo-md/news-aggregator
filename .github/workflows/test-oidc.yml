@@ -1,9 +1,9 @@
-name: AWS OIDC Connection Test
+name: AWS OIDC Prod Connection Test
 
 on:
     push:
         branches:
-            - "feat/*"
+            - "prod/*"
 
 permissions:
     id-token: write
