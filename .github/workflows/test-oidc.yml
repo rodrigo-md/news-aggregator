@@ -34,5 +34,5 @@ jobs:
                   role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
                   aws-region: ${{ vars.AWS_REGION }}
 
-            - name: Test AWS Connection
+            - name: Test AWS Connection in prod
               run: aws sts get-caller-identity
