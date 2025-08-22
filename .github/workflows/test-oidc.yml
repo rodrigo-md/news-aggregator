@@ -24,9 +24,9 @@ jobs:
                   echo "Raw JWT: $TOKEN"
 
                   # Decode payload (middle part of JWT)
-                  PAYLOAD=$(echo $TOKEN | cut -d '.' -f2 | tr '_-' '/+' | base64 --decode)
-                  echo "Decoded payload:"
-                  echo "$PAYLOAD"
+                  #PAYLOAD=$(echo $TOKEN | cut -d '.' -f2 | tr '_-' '/+' | base64 --decode)
+                  #echo "Decoded payload:"
+                  #echo "$PAYLOAD"
 
             - name: Configure AWS credentials (OIDC)
               uses: aws-actions/configure-aws-credentials@v4
